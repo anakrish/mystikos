@@ -16,7 +16,7 @@ all: package
 package: $(APPDIR) private.pem
 	$(MYST) package-sgx $(APPDIR) private.pem config.json
 
-run: 
+run:
 	myst/bin/$(APP_NAME) $(OPTS)
 
 $(APPDIR):
@@ -44,8 +44,25 @@ run-ext2: ext2rootfs
 gdb: clean cpio
 	$(MYST_GDB) --args $(MYST_EXEC) rootfs /app/casablanca/build.release/Release/Binaries/test_runner libhttplistener_test.so --app-config-path debug-config.json $(OPTS)
 
+repro-native: $(APPDIR)
+	cp repro.py $(APPDIR)/app/
+	./appdir-exec apk add gdb
+	./appdir-exec sh -c \
+            'cd /app/casablanca/build.debug/Release/Binaries && \
+               gdb -ex "source /app/repro.py" \
+                   -ex "set confirm off" \
+                   -ex "quit $$_exitcode" \
+                   --args ./test_runner libhttplistener_test.so'
+
+repro-myst: ext2rootfs
+	$(MYST_GDB) -ex "source repro.py" \
+                    -ex "set confirm off" \
+                    -ex "quit $$_exitcode" \
+                    --args $(MYST_EXEC) ext2rootfs  --app-config-path debug-config.json $(OPTS) \
+                                        /app/casablanca/build.release/Release/Binaries/test_runner libhttplistener_test.so
+
 private.pem:
 	openssl genrsa -out private.pem -3 3072
 
 clean:
-	rm -rf rootfs $(APPDIR) myst private.pem 
+	rm -rf rootfs $(APPDIR) myst private.pem
