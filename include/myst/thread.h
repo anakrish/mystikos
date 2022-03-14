@@ -390,6 +390,12 @@ struct myst_thread
     // will wake it up. pause_futex=0 means futex unavailable; 1 means
     // available.
     int pause_futex;
+
+
+    struct {
+	volatile int* uaddr;
+	struct futex* futex;
+    } futex_cache;
 };
 
 MYST_INLINE bool myst_valid_thread(const myst_thread_t* thread)

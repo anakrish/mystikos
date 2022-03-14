@@ -91,6 +91,10 @@ static futex_t* _get_futex(volatile int* uaddr)
     futex_t* ret = NULL;
     uint64_t index = ((uint64_t)uaddr >> 4) % NUM_CHAINS;
     futex_t* f;
+    myst_thread_t* thread = myst_thread_self();
+
+    if (thread->futex_cache.uaddr == uaddr)
+        return thread->futex_cache.futex;
 
     _lock();
 
@@ -118,6 +122,8 @@ static futex_t* _get_futex(volatile int* uaddr)
     f->next = _chains[index];
     _chains[index] = f;
 
+    thread->futex_cache.uaddr = uaddr;
+    thread->futex_cache.futex = f;
     ret = f;
 
 done:
