@@ -30,7 +30,7 @@ MYST_INLINE void myst_spinlock_init(myst_spinlock_t* s)
 MYST_INLINE void myst_spin_lock(myst_spinlock_t* s)
 {
     void* thread;
-    asm volatile("mov %%fs, %0" : "=r"(thread));
+    asm volatile("mov %%fs:0, %0" : "=r"(thread));
 
     int my_ticket = __atomic_fetch_add(&s->ticket, 1, __ATOMIC_ACQ_REL);
     while (__atomic_load_n(&s->serving, __ATOMIC_ACQUIRE) != my_ticket)
