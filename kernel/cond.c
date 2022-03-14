@@ -26,7 +26,7 @@ int myst_cond_init(myst_cond_t* c)
         return -EINVAL;
 
     memset(c, 0, sizeof(myst_cond_t));
-    c->lock = 0;
+    myst_spinlock_init(&c->lock);
 
     return 0;
 }

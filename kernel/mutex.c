@@ -22,7 +22,7 @@ int myst_mutex_init(myst_mutex_t* m)
         return -EINVAL;
 
     memset(m, 0, sizeof(myst_mutex_t));
-    m->lock = 0;
+    myst_spinlock_init(&m->lock);
 
     return 0;
 }
@@ -211,7 +211,9 @@ int myst_mutex_destroy(myst_mutex_t* mutex)
     {
         if (myst_thread_queue_empty(&m->queue))
         {
-            memset(m, 0, sizeof(myst_mutex_t));
+            m->refs = 0;
+            m->owner = NULL;
+            memset(&m->queue, 0, sizeof(m->queue));
         }
         else
         {

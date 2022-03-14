@@ -491,12 +491,12 @@ static int _init_main_thread(
     thread->savgid = MYST_DEFAULT_GID;
     thread->fsgid = MYST_DEFAULT_GID;
 
-    process->thread_group_lock = MYST_SPINLOCK_INITIALIZER;
+    myst_spinlock_init(&process->thread_group_lock);
     thread->thread_lock = &process->thread_group_lock;
     process->umask = MYST_DEFAULT_UMASK;
     process->pgid = pid;
 
-    process->cwd_lock = MYST_SPINLOCK_INITIALIZER;
+    myst_spinlock_init(&process->cwd_lock);
     process->cwd = strdup(cwd);
     if (process->cwd == NULL)
         ERAISE(-ENOMEM);

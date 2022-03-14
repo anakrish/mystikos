@@ -1334,11 +1334,12 @@ static long _syscall_clone_vfork(
             sizeof(child_process->rlimits));
         child_thread->num_supgid = parent_thread->num_supgid;
 
-        child_process->thread_group_lock = MYST_SPINLOCK_INITIALIZER;
-        child_thread->thread_lock = &child_process->thread_group_lock;
+        myst_spinlock_init(&child_process->thread_group_lock);
+        myst_spinlock_init(
+            child_thread->thread_lock = &child_process->thread_group_lock);
 
         /* Inherit parent current working directory */
-        child_process->cwd_lock = MYST_SPINLOCK_INITIALIZER;
+        myst_spinlock_init(&child_process->cwd_lock);
         child_process->cwd = strdup(parent_process->cwd);
         if (child_process->cwd == NULL)
             ERAISE(-ENOMEM);
