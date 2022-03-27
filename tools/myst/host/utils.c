@@ -8,6 +8,7 @@
 #include <libgen.h>
 #include <limits.h>
 #include <malloc.h>
+#include <signal.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -290,4 +291,33 @@ int get_fork_mode_opts(
     }
 
     return 0;
+}
+
+bool myst_wait_on_segv(void)
+{
+    char* s = NULL;
+    if ((s = getenv("MYST_WAIT_ON_SEGV")) && strcmp(s, "1") == 0)
+        return 1;
+    return 0;
+}
+
+static void _segv_handler(int sig)
+{
+    (void)sig;
+    const char* msg =
+        "Encountered SEGV. Pausing to allow attaching debugger.\n";
+    write(2, msg, strlen(msg));
+    volatile int done = 0;
+    while (!done)
+    {
+        pause();
+    }
+}
+
+void myst_configure_wait_on_segv(void)
+{
+    if (myst_wait_on_segv())
+    {
+        sigset(SIGSEGV, _segv_handler);
+    }
 }

@@ -63,4 +63,8 @@ long myst_add_symbol_file_by_path(
 extern void* __image_data;
 extern size_t __image_size;
 
+void myst_configure_wait_on_segv(void);
+
+bool myst_wait_on_segv(void);
+
 #endif /* _HOST_MYST_UTILS_H */

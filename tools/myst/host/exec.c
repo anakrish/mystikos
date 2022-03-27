@@ -283,6 +283,8 @@ int exec_launch_enclave(
     old_sighandler =
         sigset(MYST_INTERRUPT_THREAD_SIGNAL, _interrupt_thread_signal_handler);
 
+    myst_configure_wait_on_segv();
+
     /* block MYST_INTERRUPT_THREAD_SIGNAL when inside the enclave */
     sigset_t set;
     sigemptyset(&set);
@@ -633,7 +635,7 @@ int exec_action(int argc, const char* argv[], const char* envp[])
                 return 1;
             }
 
-            options.debug_symbols = (bool)r;
+            options.debug_symbols = (bool)r || myst_wait_on_segv();
         }
     }
 
