@@ -187,7 +187,7 @@ static void _get_options(
         if ((r = process_is_being_traced()) < 0)
             _err("process_is_being_traced() failed: %d", r);
 
-        opts->debug_symbols = (bool)r;
+        opts->debug_symbols = (bool)r || myst_wait_on_segv();
     }
 
     /* Get MYST_MEMCHECK environment variable */
@@ -351,6 +351,8 @@ static void _install_signal_handlers()
         if (sigaction(SIGSEGV, &sa, NULL) == -1)
             _err("Failed to register SIGSEGV signal handler\n");
     }
+
+    myst_configure_wait_on_segv();
 }
 
 /* the address of this is eventually passed to futex (uaddr argument) */
