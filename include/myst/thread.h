@@ -215,6 +215,9 @@ struct myst_process
     /* Process times for current process system and user time, and kernel and
      * user time for children that have exited and been waited for */
     struct tms process_times;
+
+    /* Has the thread group been killed */
+    intptr_t kill_thread_group_status;
 };
 
 struct myst_thread

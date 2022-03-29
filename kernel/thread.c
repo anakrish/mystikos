@@ -1555,8 +1555,35 @@ size_t myst_kill_thread_group()
     myst_process_t* process = myst_process_self();
     myst_thread_t* t = NULL;
     size_t count = 0;
+    int kill_status;
 
     myst_spin_lock(&process->thread_group_lock);
+    kill_status =
+        __atomic_load_n(&process->kill_thread_group_status, __ATOMIC_ACQUIRE);
+
+    if (kill_status == 0)
+    {
+        // This is the first call to myst_kill_thread_group for this process.
+        // Continue to kill.
+        __atomic_store_n(
+            &process->kill_thread_group_status, 1, __ATOMIC_RELEASE);
+    }
+    else if (kill_status == 1)
+    {
+        // Another thread in the group has started the kill.
+        // That thread could wait for this thread to complete.
+        // Therefore, continue execution.
+        myst_spin_unlock(&process->thread_group_lock);
+        goto done;
+    }
+    else
+    {
+        // Can control reach here?
+        assert("myst_kill_thread_group invoked by undead" == NULL);
+        // Treat it just like kill_status = 1
+        myst_spin_unlock(&process->thread_group_lock);
+        goto done;
+    }
 
     // Send termination signal to all running child threads.
     for (t = process->main_process_thread; t != NULL; t = t->group_next)
@@ -1630,11 +1657,16 @@ size_t myst_kill_thread_group()
         // DO NOT ACCESS CONTENTS OF THREAD!
         // it may already be freed! We are not in the lock any more
         if (t == NULL)
+        {
+            __atomic_store_n(
+                &process->kill_thread_group_status, 2, __ATOMIC_RELEASE);
             break;
+        }
 
         myst_sleep_msec(10, false);
     }
 
+done:
     return count;
 }
 
